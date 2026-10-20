@@ -1,0 +1,10 @@
+
+/src/generated/prisma
+
+
+.env
+node_modules
+PORT=3000
+generated
+
+
