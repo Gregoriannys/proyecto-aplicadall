@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { registrar } from '../services/auth.service';
-import estilos from '../styles/estilos';
+import { useRouter } from 'expo-router';
+import { registrar } from '../../services/auth.service';
+import estilos from '../../styles/estilos';
 
-export default function RegistroScreen({ navigation }) {
+export default function Registro() {
+  const router = useRouter();
+
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,7 +27,7 @@ export default function RegistroScreen({ navigation }) {
       
       await registrar(nombre.trim(), email.trim(), password, rol);
       Alert.alert('Listo', 'Cuenta creada. Ahora inicia sesion.');
-      navigation.navigate('Login');
+      router.replace('/login');
     } catch (e) {
       setError(e.message);
     } finally {
@@ -36,13 +39,15 @@ export default function RegistroScreen({ navigation }) {
     <View style={estilos.contenedor}>
       <Text style={estilos.titulo}>Crear cuenta</Text>
 
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Nombre"
         value={nombre}
         onChangeText={setNombre}
       />
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Email"
         value={email}
@@ -50,7 +55,8 @@ export default function RegistroScreen({ navigation }) {
         autoCapitalize="none"
         keyboardType="email-address"
       />
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Password"
         value={password}
@@ -88,7 +94,7 @@ export default function RegistroScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+      <TouchableOpacity onPress={() => router.replace('/login')}>
         <Text style={estilos.enlace}>¿Ya tienes cuenta? Inicia sesion</Text>
       </TouchableOpacity>
     </View>

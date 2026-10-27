@@ -95,6 +95,11 @@ export async function eliminar(req, res) {
       return res.status(404).json({ mensaje: 'Servicio no encontrado' });
     }
 
+        const reservas = await prisma.reserva.count({ where: { servicioId: id } });
+    if (reservas > 0) {
+      return res.status(400).json({ mensaje: 'No se puede eliminar: el servicio tiene reservas' });
+    }
+
     await prisma.servicio.delete({ where: { id } });
     res.json({ mensaje: 'Servicio eliminado' });
   } catch (error) {

@@ -93,4 +93,30 @@ export default StyleSheet.create({
   botonPeligro: {
     backgroundColor: '#dc2626',
   },
+  descripcion: {
+    fontSize: 16,
+    color: '#374151',
+    marginBottom: 16,
+  },
+  etiqueta: {
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  enlaceTarjeta: {
+    color: '#2563eb',
+    marginTop: 8,
+  },
+  estado: {
+    fontWeight: 'bold',
+    marginTop: 4,
+  },
+  estadoPendiente: {
+    color: '#d97706',
+  },
+  estadoCompletada: {
+    color: '#16a34a',
+  },
+  estadoCancelada: {
+    color: '#6b7280',
+  },
 });

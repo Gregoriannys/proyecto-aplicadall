@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useAuth } from '../context/AuthContext';
-import estilos from '../styles/estilos';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+import estilos from '../../styles/estilos';
 
-export default function LoginScreen({ navigation }) {
+export default function Login() {
+  const router = useRouter();
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -33,7 +35,8 @@ export default function LoginScreen({ navigation }) {
     <View style={estilos.contenedor}>
       <Text style={estilos.titulo}>Iniciar sesion</Text>
 
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Email"
         value={email}
@@ -41,7 +44,8 @@ export default function LoginScreen({ navigation }) {
         autoCapitalize="none"
         keyboardType="email-address"
       />
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Password"
         value={password}
@@ -59,7 +63,7 @@ export default function LoginScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
+      <TouchableOpacity onPress={() => router.push('/registro')}>
         <Text style={estilos.enlace}>¿No tienes cuenta? Registrate</Text>
       </TouchableOpacity>
     </View>

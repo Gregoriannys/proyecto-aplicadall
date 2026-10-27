@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { crearServicio } from '../services/servicios.service';
-import estilos from '../styles/estilos';
+import { Redirect, useRouter } from 'expo-router';
+import { useAuth } from '../../../context/AuthContext';
+import { crearServicio } from '../../../services/servicios.service';
+import estilos from '../../../styles/estilos';
 
-export default function CrearServicioScreen({ navigation }) {
+export default function CrearServicio() {
+  const router = useRouter();
+  const { usuario } = useAuth();
+
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [duracion, setDuracion] = useState('');
@@ -28,37 +33,46 @@ export default function CrearServicioScreen({ navigation }) {
         precio: Number(precio),
       });
       Alert.alert('Listo', 'Servicio creado correctamente');
-      navigation.goBack();
+      router.back();
     } catch (e) {
       setError(e.message);
       setCargando(false);
     }
   }
 
+  
+  if (usuario?.rol !== 'admin') {
+    return <Redirect href="/servicios" />;
+  }
+
   return (
     <View style={estilos.contenedor}>
       <Text style={estilos.titulo}>Nuevo servicio</Text>
 
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Nombre"
         value={nombre}
         onChangeText={setNombre}
       />
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Descripcion"
         value={descripcion}
         onChangeText={setDescripcion}
       />
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Duracion (minutos)"
         value={duracion}
         onChangeText={setDuracion}
         keyboardType="numeric"
       />
-      <TextInput placeholderTextColor="#6b7280"
+      <TextInput
+        placeholderTextColor="#6b7280"
         style={estilos.input}
         placeholder="Precio"
         value={precio}

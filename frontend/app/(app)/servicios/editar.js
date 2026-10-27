@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { editarServicio } from '../services/servicios.service';
-import estilos from '../styles/estilos';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useAuth } from '../../../context/AuthContext';
+import { editarServicio } from '../../../services/servicios.service';
+import estilos from '../../../styles/estilos';
 
-export default function EditarServicioScreen({ route, navigation }) {
+export default function EditarServicio() {
+  const router = useRouter();
+  const { usuario } = useAuth();
+
   
-  const { servicio } = route.params;
+  const params = useLocalSearchParams();
 
-  const [nombre, setNombre] = useState(servicio.nombre);
-  const [descripcion, setDescripcion] = useState(servicio.descripcion);
-  const [duracion, setDuracion] = useState(String(servicio.duracion));
-  const [precio, setPrecio] = useState(String(servicio.precio));
+  const [nombre, setNombre] = useState(params.nombre ?? '');
+  const [descripcion, setDescripcion] = useState(params.descripcion ?? '');
+  const [duracion, setDuracion] = useState(params.duracion ?? '');
+  const [precio, setPrecio] = useState(params.precio ?? '');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,18 +29,23 @@ export default function EditarServicioScreen({ route, navigation }) {
 
     setCargando(true);
     try {
-      await editarServicio(servicio.id, {
+      await editarServicio(params.id, {
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
         duracion: Number(duracion),
         precio: Number(precio),
       });
       Alert.alert('Listo', 'Servicio actualizado correctamente');
-      navigation.goBack();
+      router.back();
     } catch (e) {
       setError(e.message);
       setCargando(false);
     }
+  }
+
+  
+  if (usuario?.rol !== 'admin') {
+    return <Redirect href="/servicios" />;
   }
 
   return (
@@ -52,14 +62,14 @@ export default function EditarServicioScreen({ route, navigation }) {
       <TextInput
         placeholderTextColor="#6b7280"
         style={estilos.input}
-        placeholder="Descripción"
+        placeholder="Descripcion"
         value={descripcion}
         onChangeText={setDescripcion}
       />
       <TextInput
         placeholderTextColor="#6b7280"
         style={estilos.input}
-        placeholder="Duración (minutos)"
+        placeholder="Duracion (minutos)"
         value={duracion}
         onChangeText={setDuracion}
         keyboardType="numeric"
