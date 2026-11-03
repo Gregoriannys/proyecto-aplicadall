@@ -7,7 +7,7 @@ const ZONA_HORARIA = '-04:00';
 
 
 function aFechaISO(fecha) {
-  const partes = fecha.split('/'); 
+  const partes = fecha.split('/');
   if (partes.length !== 3) return null;
 
   const [dia, mes, anio] = partes;
@@ -18,7 +18,7 @@ function aFechaISO(fecha) {
 
 
 function horaValida(hora) {
-  const partes = hora.split(':'); 
+  const partes = hora.split(':');
   if (partes.length !== 2) return false;
 
   const [horas, minutos] = partes;
@@ -45,40 +45,61 @@ function darFormato(reserva) {
 export async function crear(req, res) {
   try {
     if (req.usuario.rol !== 'cliente') {
-      return res.status(403).json({ mensaje: 'Solo los clientes pueden hacer reservas' });
+      return res.status(403).json({ error: 'Solo los clientes pueden hacer reservas' });
     }
 
     const { servicioId, fecha, hora } = req.body;
 
     if (!servicioId || !fecha || !hora) {
-      return res.status(400).json({ mensaje: 'Servicio, fecha y hora son obligatorios' });
+      return res.status(400).json({ error: 'Servicio, fecha y hora son obligatorios' });
     }
 
     const fechaISO = aFechaISO(String(fecha));
     if (!fechaISO || !horaValida(String(hora))) {
       return res.status(400).json({
-        mensaje: 'Para la fecha (ej. 15/12/2026) y para la hora (ej. 14:30)',
+        error: 'Formato incorrecto para la fecha  o para la hora ',
       });
     }
 
-    
     const momento = new Date(`${fechaISO}T${hora}:00${ZONA_HORARIA}`);
     if (isNaN(momento.getTime())) {
-      return res.status(400).json({ mensaje: 'La fecha u hora no es valida' });
+      return res.status(400).json({ error: 'La fecha u hora no es valida' });
     }
+
+
     if (momento < new Date()) {
-      return res.status(400).json({ mensaje: 'No se puede reservar en una fecha pasada' });
+      return res.status(400).json({ error: 'La fecha debe ser futura' });
     }
+
 
     const servicio = await prisma.servicio.findUnique({ where: { id: Number(servicioId) } });
     if (!servicio) {
-      return res.status(404).json({ mensaje: 'Servicio no encontrado' });
+      return res.status(404).json({ error: 'El servicio no existe' });
     }
 
-    
+    if (servicio.activo === false) {
+      return res.status(400).json({ error: 'El servicio no está activo' });
+    }
+
+    const fechaReservaDate = new Date(`${fechaISO}T00:00:00.000Z`);
+
+
+    const reservaDuplicada = await prisma.reserva.findFirst({
+      where: {
+        usuarioId: req.usuario.id,
+        servicioId: Number(servicioId),
+        fecha: fechaReservaDate,
+        estado: 'pendiente'
+      }
+    });
+
+    if (reservaDuplicada) {
+      return res.status(409).json({ error: 'Ya tienes otra reserva activa para este servicio en la misma fecha' });
+    }
+
     const reserva = await prisma.reserva.create({
       data: {
-        fecha: new Date(`${fechaISO}T00:00:00.000Z`),
+        fecha: fechaReservaDate,
         hora,
         usuarioId: req.usuario.id,
         servicioId: servicio.id,
@@ -89,10 +110,9 @@ export async function crear(req, res) {
     res.status(201).json(darFormato(reserva));
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: 'Error en el servidor' });
+    res.status(500).json({ error: 'Error en el servidor' });
   }
 }
-
 
 export async function misReservas(req, res) {
   try {
@@ -163,12 +183,12 @@ export async function cancelar(req, res) {
       return res.status(404).json({ mensaje: 'Reserva no encontrada' });
     }
 
-    
+
     if (reserva.usuarioId !== req.usuario.id) {
       return res.status(403).json({ mensaje: 'No puedes cancelar una reserva que no es tuya' });
     }
 
-    
+
     if (reserva.estado !== 'pendiente') {
       return res.status(400).json({ mensaje: 'Solo se pueden cancelar reservas pendientes' });
     }

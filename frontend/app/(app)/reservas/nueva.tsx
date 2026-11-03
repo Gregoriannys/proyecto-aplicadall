@@ -5,12 +5,12 @@ import { useAuth } from '../../../context/AuthContext';
 import { crearReserva } from '../../../features/reservas/reservas.service';
 import { mascaraFecha, mascaraHora } from '../../../lib/fechas';
 import estilos from '../../../styles/estilos';
+import { programarNotificacionReserva } from '../../../services/notifications.service';
 
 export default function NuevaReserva() {
   const router = useRouter();
   const { usuario } = useAuth();
 
-  
   const { servicioId, nombre, duracion, precio } = useLocalSearchParams<{
     servicioId: string;
     nombre: string;
@@ -33,18 +33,24 @@ export default function NuevaReserva() {
 
     setCargando(true);
     try {
-      await crearReserva({ servicioId: Number(servicioId), fecha, hora });
-      Alert.alert('Listo', 'Reserva creada. Quedo en estado pendiente.');
+     
+      const reservaCreada = await crearReserva({ servicioId: Number(servicioId), fecha, hora });
+
       
-     router.dismissAll();
+      await programarNotificacionReserva(reservaCreada);
+
+      Alert.alert('Listo', 'Reserva creada y notificación programada.');
+      
+      router.dismissAll();
       router.push('/reservas');
-    } catch (e) {
-      setError((e as Error).message);
+    } catch (e: any) {
+      
+      const mensajeError = e.response?.data?.error || e.response?.data?.mensaje || (e as Error).message;
+      setError(mensajeError);
       setCargando(false);
     }
   }
 
-  
   if (usuario?.rol !== 'cliente') {
     return <Redirect href="/servicios" />;
   }

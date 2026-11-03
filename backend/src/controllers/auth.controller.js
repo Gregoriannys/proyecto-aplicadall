@@ -71,3 +71,4 @@ export async function login(req, res) {
     res.status(500).json({ mensaje: 'Error en el servidor' });
   }
 }
+

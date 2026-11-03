@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { inicializarNotificaciones } from '../../services/notifications.service'; 
 
 export default function AppLayout() {
   const { token, cargando } = useAuth();
+
+  
+  useEffect(() => {
+    inicializarNotificaciones();
+  }, []);
 
   if (cargando) {
     return (
@@ -14,7 +20,6 @@ export default function AppLayout() {
     );
   }
 
-  
   if (!token) {
     return <Redirect href="/login" />;
   }
@@ -27,6 +32,7 @@ export default function AppLayout() {
       <Stack.Screen name="servicios/editar" options={{ title: 'Editar servicio' }} />
       <Stack.Screen name="reservas/index" options={{ title: 'Mis reservas' }} />
       <Stack.Screen name="reservas/nueva" options={{ title: 'Nueva reserva' }} />
+      <Stack.Screen name="perfil" options={{ title: 'Mi Perfil' }} /> 
     </Stack>
   );
 }

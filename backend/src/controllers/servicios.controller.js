@@ -1,6 +1,5 @@
 import prisma from '../config/prisma.js';
 
-
 function validarServicio({ nombre, descripcion, duracion, precio }) {
   if (!nombre || !descripcion) {
     return 'Nombre y descripcion son obligatorios';
@@ -102,6 +101,38 @@ export async function eliminar(req, res) {
 
     await prisma.servicio.delete({ where: { id } });
     res.json({ mensaje: 'Servicio eliminado' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error en el servidor' });
+  }
+}
+
+
+export async function actualizarPerfil(req, res) {
+  try {
+    const { nombre } = req.body;
+
+    if (!nombre) {
+      return res.status(400).json({ mensaje: 'El nombre es obligatorio' });
+    }
+
+    
+    const usuarioActualizado = await prisma.usuario.update({
+      where: { id: req.usuario.id },
+      data: { nombre },
+      select: {
+        id: true,
+        nombre: true,
+        email: true,
+        rol: true
+        
+      }
+    });
+
+    res.json({
+      mensaje: 'Perfil actualizado correctamente',
+      usuario: usuarioActualizado
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: 'Error en el servidor' });
