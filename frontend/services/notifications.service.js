@@ -1,10 +1,10 @@
-import { setNotificationHandler } from 'expo-notifications/build/NotificationsHandler';
-import { requestPermissionsAsync } from 'expo-notifications/build/NotificationPermissions';
-import { scheduleNotificationAsync } from 'expo-notifications/build/scheduleNotificationAsync';
-import { cancelScheduledNotificationAsync } from 'expo-notifications/build/notificationScheduledNotifications';
-import { SchedulableTriggerInputTypes } from 'expo-notifications/build/Notifications.types';
-
-
+import {
+  setNotificationHandler,
+  requestPermissionsAsync,
+  scheduleNotificationAsync,
+  cancelScheduledNotificationAsync,
+  SchedulableTriggerInputTypes,
+} from 'expo-notifications';
 const RECORDATORIO_DEMO_SEGUNDOS = 0;
 
 setNotificationHandler({

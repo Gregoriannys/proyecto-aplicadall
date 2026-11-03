@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import { obtenerServicios, eliminarServicio } from '../../../services/servicios.service';
 import estilos from '../../../styles/estilos';
 import type { Servicio } from '../../../lib/tipos';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Servicios() {
   const router = useRouter();
@@ -62,6 +63,19 @@ export default function Servicios() {
 
   return (
     <View style={estilos.contenedor}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.push('/perfil')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="person-circle-outline" size={32} color="#2563eb" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+
       <Text style={{ marginBottom: 12 }}>
         Hola, {usuario?.nombre} ({usuario?.rol})
       </Text>

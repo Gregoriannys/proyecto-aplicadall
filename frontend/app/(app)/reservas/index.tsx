@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { obtenerMisReservas, cancelarReserva } from '../../../features/reservas/reservas.service';
 import estilos from '../../../styles/estilos';
 import type { Reserva } from '../../../lib/tipos';
+import { cancelarNotificacionReserva } from '../../../services/notifications.service';
 
 
 const estiloEstado = {
@@ -57,6 +58,7 @@ export default function MisReservas() {
     setError('');
     try {
       await cancelarReserva(id);
+      await cancelarNotificacionReserva(id);
       await cargarReservas(); 
     } catch (e) {
       setError((e as Error).message);

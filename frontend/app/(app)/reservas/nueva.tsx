@@ -33,18 +33,18 @@ export default function NuevaReserva() {
 
     setCargando(true);
     try {
-     
+
       const reservaCreada = await crearReserva({ servicioId: Number(servicioId), fecha, hora });
 
-      
+
       await programarNotificacionReserva(reservaCreada);
 
       Alert.alert('Listo', 'Reserva creada y notificación programada.');
-      
+
       router.dismissAll();
       router.push('/reservas');
     } catch (e: any) {
-      
+
       const mensajeError = e.response?.data?.error || e.response?.data?.mensaje || (e as Error).message;
       setError(mensajeError);
       setCargando(false);

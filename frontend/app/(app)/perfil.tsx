@@ -1,149 +1,195 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { peticion } from '../../services/api';
 
 export default function PerfilScreen() {
-  const router = useRouter();
-  const { usuario, setUsuario, setToken } = useAuth();
+  const { usuario, logout, actualizarUsuario } = useAuth();
 
   const [nombre, setNombre] = useState(usuario?.nombre || '');
   const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleGuardarPerfil = async () => {
+  const inicial = (usuario?.nombre || '?').trim().charAt(0).toUpperCase();
+  const etiquetaRol = usuario?.rol === 'admin' ? 'Administrador' : 'Cliente';
+  const sinCambios = nombre.trim() === (usuario?.nombre || '');
+
+  async function guardar() {
+    setError('');
+
     if (!nombre.trim()) {
-      Alert.alert('Error', 'El nombre no puede estar vacío');
+      setError('El nombre no puede estar vacío');
       return;
     }
 
+    setCargando(true);
     try {
-      setCargando(true);
-
-      const respuesta = await (peticion as any)('/usuarios/perfil', 'PUT', { nombre });
-
+      const respuesta = await (peticion as any)('/usuarios/perfil', 'PUT', {
+        nombre: nombre.trim(),
+      });
       const usuarioActualizado = respuesta.usuario || respuesta;
 
-
-      await AsyncStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
-      if (setUsuario) setUsuario(usuarioActualizado);
-
-      Alert.alert('Éxito', 'Perfil actualizado correctamente');
-    } catch (error: any) {
-      console.error(error);
-      Alert.alert('Error', error.message || 'No se pudo actualizar el perfil');
+      await actualizarUsuario(usuarioActualizado);
+      Alert.alert('Listo', 'Perfil actualizado correctamente');
+    } catch (e) {
+      setError((e as Error).message || 'No se pudo actualizar el perfil');
     } finally {
       setCargando(false);
     }
-  };
+  }
 
-  const handleCerrarSesion = async () => {
-    try {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('usuario');
-      if (setToken) setToken(null);
-      if (setUsuario) setUsuario(null);
-      router.replace('/(auth)/login');
-    } catch (error) {
-      console.error('Error al cerrar sesión', error);
-    }
-  };
+  
+  async function cerrarSesion() {
+    await logout();
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Mi Perfil</Text>
+    <ScrollView
+      style={styles.pantalla}
+      contentContainerStyle={styles.contenido}
+      keyboardShouldPersistTaps="handled"
+    >
+      
+      <View style={styles.cabecera}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarTexto}>{inicial}</Text>
+        </View>
+        <Text style={styles.nombreGrande}>{usuario?.nombre}</Text>
+        <View style={styles.insignia}>
+          <Text style={styles.insigniaTexto}>{etiquetaRol}</Text>
+        </View>
+      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Correo Electronico:</Text>
-        <TextInput
-          style={[styles.input, styles.inputDisabled]}
-          value={usuario?.email || ''}
-          editable={false}
-        />
+      
+      <View style={styles.tarjeta}>
+        <Text style={styles.etiqueta}>Correo electrónico</Text>
+        <View style={styles.campoBloqueado}>
+          <Text style={styles.campoBloqueadoTexto}>{usuario?.email}</Text>
+          <Ionicons name="lock-closed-outline" size={18} color="#6b7280" />
+        </View>
+        <Text style={styles.ayuda}>El correo no se puede cambiar.</Text>
 
-        <Text style={styles.label}>Nombre:</Text>
+        <Text style={[styles.etiqueta, { marginTop: 16 }]}>Nombre</Text>
         <TextInput
           style={styles.input}
           value={nombre}
           onChangeText={setNombre}
           placeholder="Tu nombre"
+          placeholderTextColor="#6b7280"
         />
 
-        <TouchableOpacity
-          style={styles.botonGuardar}
-          onPress={handleGuardarPerfil}
-          disabled={cargando}
-        >
-          <Text style={styles.textoBoton}>{cargando ? 'Guardando...' : 'Guardar Cambios'}</Text>
-        </TouchableOpacity>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        {cargando ? (
+          <ActivityIndicator size="large" style={{ marginTop: 8 }} />
+        ) : (
+          <TouchableOpacity
+            style={[styles.botonGuardar, sinCambios && styles.botonDeshabilitado]}
+            onPress={guardar}
+            disabled={sinCambios}
+          >
+            <Text style={styles.botonGuardarTexto}>Guardar cambios</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <TouchableOpacity style={styles.botonCerrarSesion} onPress={handleCerrarSesion}>
-        <Text style={styles.textoBotonCerrar}>Cerrar Sesion</Text>
+      
+      <TouchableOpacity style={styles.botonCerrar} onPress={cerrarSesion}>
+        <Ionicons name="log-out-outline" size={20} color="#dc2626" />
+        <Text style={styles.botonCerrarTexto}>Cerrar sesion</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'center'
+  pantalla: { flex: 1, backgroundColor: '#f3f4f6' },
+  contenido: { padding: 20, paddingBottom: 40 },
+
+  cabecera: { alignItems: 'center', marginTop: 8, marginBottom: 24 },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#2563eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
-  titulo: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center'
+  avatarTexto: { color: '#fff', fontSize: 38, fontWeight: 'bold' },
+  nombreGrande: { fontSize: 22, fontWeight: 'bold', color: '#111827' },
+  insignia: {
+    marginTop: 6,
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  card: {
+  insigniaTexto: { color: '#1d4ed8', fontSize: 13, fontWeight: '600' },
+
+  tarjeta: {
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 14,
     marginBottom: 20,
-    elevation: 3
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 5,
-    color: '#333'
+  etiqueta: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6 },
+  campoBloqueado: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#e5e7eb',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
+  campoBloqueadoTexto: { fontSize: 16, color: '#4b5563' },
+  ayuda: { fontSize: 12, color: '#6b7280', marginTop: 4 },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    marginBottom: 15,
-    backgroundColor: '#fff'
-  },
-  inputDisabled: {
-    backgroundColor: '#e9ecef',
-    color: '#6c757d'
-  },
-  botonGuardar: {
-    backgroundColor: '#007bff',
+    borderColor: '#d1d5db',
+    borderRadius: 10,
     padding: 12,
-    borderRadius: 8,
-    alignItems: 'center'
-  },
-  textoBoton: {
-    color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold'
+    backgroundColor: '#fff',
+    marginBottom: 12,
   },
-  botonCerrarSesion: {
-    backgroundColor: '#dc3545',
-    padding: 12, borderRadius: 8,
-    alignItems: 'center'
+  error: { color: '#dc2626', marginBottom: 10 },
+
+  botonGuardar: {
+    backgroundColor: '#2563eb',
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
   },
-  textoBotonCerrar: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold'
+  botonDeshabilitado: { opacity: 0.45 },
+  botonGuardarTexto: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+
+  botonCerrar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#dc2626',
+    backgroundColor: '#fff',
   },
+  botonCerrarTexto: { color: '#dc2626', fontSize: 16, fontWeight: 'bold' },
 });

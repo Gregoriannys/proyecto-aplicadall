@@ -72,3 +72,34 @@ export async function login(req, res) {
   }
 }
 
+export async function actualizarPerfil(req, res) {
+  try {
+    const { nombre } = req.body;
+
+    if (!nombre) {
+      return res.status(400).json({ mensaje: 'El nombre es obligatorio' });
+    }
+
+    
+    const usuarioActualizado = await prisma.usuario.update({
+      where: { id: req.usuario.id },
+      data: { nombre },
+      select: {
+        id: true,
+        nombre: true,
+        email: true,
+        rol: true
+        
+      }
+    });
+
+    res.json({
+      mensaje: 'Perfil actualizado correctamente',
+      usuario: usuarioActualizado
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error en el servidor' });
+  }
+}
+
